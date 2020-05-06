@@ -3,60 +3,53 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
+type Article struct {
+	Title   string `json:"Title"`
+	Desc    string `json:"desc"`
+	Content string `json:"content"`
+}
+
+func returnAllArticles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: returnAllArticles")
+	json.NewEncoder(w).Encode(Articles)
+}
 func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Tylers Homepage")
+	fmt.Fprintf(w, "Tylers HomePage")
 	fmt.Println("Endpoint Hit: homePage")
 }
+
+var Articles []Article
+
+// Existing code from above
 func handleRequests() {
-	http.HandleFunc("/", homePage)
-	//adding the article route\
-	http.HandleFunc("/articles", getAllArticles)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	myRouter := mux.NewRouter().StrictSlash(true) //Http request multiplexer
+	// replace http.HandleFunc with myRouter.HandleFunc
+	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/article", returnAllArticles)
+	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
+
 func main() {
+	fmt.Println("Multiplexer router")
 	Articles = []Article{
-        Article{Id: "1", Title: "YO ", Description: "Hmmmmmm", Content: "Content"},
-		Article{Id: "2", 
-		Title: "Hello 2", 
-		Description: "Description", 
-		Content: "Article Content"},
-    }
+		Article{Title: "Hello", Desc: "Dummy desc", Content: "Dummy Data"},
+		Article{Title: "Hello 2", Desc: "Dummy desc", Content: "Dummy Data"},
+	}
 	handleRequests()
 }
+func returnSingleArticle(w http.ResponseWriter, r *http.Request) {
 
-//struct structure of data fields
-//with declared data
-type Article struct {
-	Id      	string `json:"Id"`
-	Title       string `json:"title"`
-	Description string `json:"desc"`
-	Content     string `json:"content"`
 }
-
-//declaring an articles array
-//simulate a db
-var Articles [
-]Article
-
-//CRUD
-//retiving all the articles
-func getAllArticles(w http.ResponseWriter, r *http.Request) {
-	// articles := Articles{
-	// 	Article{
-	// 	Title:" Blah Blah Test ", 
-	// 	desc: "Description", 
-	// 	content:"Content"}
-	// },
-	// {
-	// 	Article{
-	// 	Title:" Blah Blah Test 101", 
-	// 	desc: "Description 101", 
-	// 	content:"Content 101"}
-	// }
-	fmt.Println("Hit! Return articles")
-	json.NewEncoder(w).Encode(Articles)
+func createArticle(w http.ResponseWriter, r *http.Request) {
+	//post request
+	//string reponse containing the request body
+	requestBody, _ := ioutil.ReadAll(r.Body)
+	fmt.Fprintf(w, "%+v", string(requestBody))
 }
